@@ -1,0 +1,75 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      # gofmt runs on Linux only: a Windows checkout can come back with CRLF
+      # and gofmt would then report every file, which teaches nobody anything.
+      - name: gofmt
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then echo "gofmt needed:"; echo "$unformatted"; exit 1; fi
+
+      - name: vet
+        run: go vet ./...
+
+      - name: test
+        run: go test ./...
+
+      - name: test -race
+        if: matrix.os == 'ubuntu-latest'
+        run: go test -race -count=1 ./...
+
+      - name: test nogui variant
+        if: matrix.os == 'ubuntu-latest'
+        run: go test -tags nogui ./internal/ui
+
+  shells:
+    # "One core, several shells" is only true if every tag builds everywhere.
+    # desktop is not in this matrix: it links a native webview, see desktop.yml.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        tags: [nogui, tui, "tui,nogui"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: build -tags ${{ matrix.tags }}
+        run: go build -tags "${{ matrix.tags }}" ./...
+
+  sizes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      # Makefile defaults GO to a local toolchain path; over here Go lives on PATH.
+      - run: make sizes GO=go
+      - name: the page stays small
+        run: go test -v ./internal/ui -run TestAssetBudget

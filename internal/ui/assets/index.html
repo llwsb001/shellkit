@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>shellkit</title>
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+<main>
+  <header>
+    <div class="brand">shellkit<span>capture · one core, several shells</span></div>
+    <div class="live"><i id="dot"></i><span id="status">connecting…</span></div>
+  </header>
+
+  <section class="card">
+    <div class="stats">
+      <div><span id="count">0</span><label>notes</label></div>
+      <div><span id="requests">0</span><label>actions</label></div>
+      <div class="wide"><span id="where">—</span><label>notes file</label></div>
+    </div>
+    <form id="addForm" class="add">
+      <input id="text" placeholder="something worth keeping…" autocomplete="off" required>
+      <input id="tags" placeholder="tags (space separated)" autocomplete="off">
+      <button class="primary">add</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <div class="bar">
+      <input id="q" placeholder="search text and tags…" autocomplete="off">
+      <span id="resultNote" class="hint"></span>
+    </div>
+    <ul id="notes" class="notes"><li class="empty">nothing yet — add one above</li></ul>
+  </section>
+
+  <footer>
+    <span id="last">no calls yet</span>
+    <span>· stdlib only · assets embedded with <code>//go:embed</code></span>
+  </footer>
+</main>
+<script src="/app.js"></script>
+</body>
+</html>
